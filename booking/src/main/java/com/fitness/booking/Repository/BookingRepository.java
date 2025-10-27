@@ -1,6 +1,7 @@
 package com.fitness.booking.Repository;
 
 import com.fitness.booking.Model.Booking;
+import com.fitness.booking.Model.Enums.BookingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,4 +13,6 @@ public interface BookingRepository extends JpaRepository<Booking,Long> {
     Optional<Object> findByIdempotencyKey(String idempotencyKey);
 
     Collection<Booking> findAllByMemberId(Long memberId);
+
+    long countByTargetIdAndBookingStatus(Long id, BookingStatus bookingStatus);
 }

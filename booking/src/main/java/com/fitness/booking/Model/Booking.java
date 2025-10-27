@@ -24,7 +24,7 @@ public class Booking extends BaseEntity{
     private Long memberId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false,length = 16)
+    @Column(nullable = false,length = 32)
     private TargetType targetType;
 
     @Column(nullable = false)
