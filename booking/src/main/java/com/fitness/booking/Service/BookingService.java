@@ -27,21 +27,16 @@ public class BookingService {
     private final CoachSessionRepository coachSessionRepository;
     private final BookingMapper bookingMapper;
 
-    /**
-     * 创建预约（会员预约教练时段）
-     */
     @Transactional
     public BookingDTO create(BookingCreateRequest request, String username) {
         Long memberId = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("用户不存在")).getId();
 
-        // 幂等检查
         bookingRepository.findByIdempotencyKey(request.getIdempotencyKey())
                 .ifPresent(b -> {
                     throw new RuntimeException("重复提交预约");
                 });
 
-        // 仅支持预约教练时段
         if (request.getTargetType() != TargetType.COACH_SESSION) {
             throw new RuntimeException("暂不支持此类型预约");
         }
@@ -53,19 +48,16 @@ public class BookingService {
             throw new RuntimeException("该时段不可预约");
         }
 
-        // 时间匹配校验
         if (!session.getStartTime().equals(request.getStartTime())
                 || !session.getEndTime().equals(request.getEndTime())) {
             throw new RuntimeException("预约时间与时段不匹配");
         }
 
-        // 容量检查
         long confirmedCount = bookingRepository.countByTargetIdAndBookingStatus(session.getId(), BookingStatus.CONFIRMED);
         if (confirmedCount >= session.getCapacity()) {
             throw new RuntimeException("该时段名额已满");
         }
 
-        // 创建预约
         Booking booking = bookingMapper.fromCreate(request);
         booking.setMemberId(memberId);
         booking.setBookingStatus(BookingStatus.CONFIRMED);
@@ -75,9 +67,7 @@ public class BookingService {
         return bookingMapper.toDto(booking);
     }
 
-    /**
-     * 查询我的预约记录
-     */
+
     public List<BookingDTO> getMyBookings(String username) {
         Long memberId = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("用户不存在")).getId();
@@ -88,9 +78,7 @@ public class BookingService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 取消预约
-     */
+
     @Transactional
     public void cancel(Long id, String username, BookingCancelRequest request) {
         Booking booking = bookingRepository.findById(id)
